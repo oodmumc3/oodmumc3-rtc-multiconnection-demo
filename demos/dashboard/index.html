@@ -310,6 +310,21 @@ input[disabled], button[disabled] {
       </tbody>
     </table>
   </script>
+
+  <script type="text/javascript">
+      (function() {
+          var params = {},
+              r = /([^&=]+)=?([^&]*)/g;
+
+          function d(s) {
+              return decodeURIComponent(s.replace(/\+/g, ' '));
+          }
+          var match, search = window.location.search;
+          while (match = r.exec(search.substring(1)))
+              params[d(match[1])] = d(match[2]);
+          window.params = params;
+      })();
+  </script>
 </head>
 <body>
   <header style="margin-bottom: 20px;">
@@ -537,7 +552,11 @@ function updateListOfRooms(rooms) {
     var groupedRooms = groupBy(rooms, 'academyName');
 
     groupedRooms.forEach(rooms => {
-        var templateText = $('#tableTemplate').text().replace('{{academyName}}', rooms[0].academyName);
+        var academyName = rooms[0].academyName;
+
+        if (params.academy && params.academy !== academyName) { return true; }
+
+        var templateText = $('#tableTemplate').text().replace('{{academyName}}', academyName);
         var $template = $(templateText);
 
         rooms.forEach((room, idx) => {
@@ -669,7 +688,8 @@ function joinAHiddenRoom(roomid) {
 
 function openCanvasDesigner() {
     $('#startRoomModel').modal('hide');
-    var href = location.href + 'canvas-designer.html?open=' + connection.isInitiator + '&sessionid=' + connection.sessionid + '&publicRoomIdentifier=' + connection.publicRoomIdentifier + '&userFullName=' + connection.extra.userFullName + '&academyName=' + connection.academyName;
+    var url = [location.protocol, '//', location.host, location.pathname].join('');
+    var href = url + 'canvas-designer.html?open=' + connection.isInitiator + '&sessionid=' + connection.sessionid + '&publicRoomIdentifier=' + connection.publicRoomIdentifier + '&userFullName=' + connection.extra.userFullName + '&academyName=' + connection.academyName;
     
     if(!!connection.password) {
       href += '&password=' + connection.password;
