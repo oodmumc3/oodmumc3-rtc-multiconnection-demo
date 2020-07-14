@@ -167,7 +167,7 @@ hr {
         <div id="onUserStatusChanged"></div>
     </div>
 
-    <div style="margin-top: 20px;position: absolute;bottom: 0;background: white; padding-bottom: 20px; width: 94%">
+    <div id="chattingContainer" style="margin-top: 20px;position: absolute;bottom: 0;background: white; padding-bottom: 20px; width: 94%">
         <div id="conversation-panel"></div>
         <div id="key-press" style="text-align: right; display: none; font-size: 11px;">
             <span style="vertical-align: middle;"></span>
@@ -206,6 +206,11 @@ connection.extra.userFullName = params.userFullName;
 
 // 학원명
 connection.academyName = params.academyName || 'Default';
+// 비활성화 리스트
+connection.disableTeacherVideo = params.disableTeacherVideo || 'false';
+connection.disableStudentVideo = params.disableStudentVideo || 'false';
+connection.disableChatting = params.disableChatting || 'false';
+connection.disableShareDisplay = params.disableShareDisplay || 'false';
 
 /// make this room public
 connection.publicRoomIdentifier = params.publicRoomIdentifier;
@@ -220,44 +225,60 @@ connection.maxParticipantsAllowed = 1000;
 // set value 2 for one-to-one connection
 // connection.maxParticipantsAllowed = 2;
 
+if (params.disableChatting === 'true') {
+    $('#chattingContainer').hide();
+}
+
+var designer;
+// 공유 화면 비활성화시 캔버스 객체 대체할 목객체로 변경 및 화면 공유 자리에 상대방 화면 보이도록 변경
+if (params.disableShareDisplay === 'true') {
+    designer = {
+        appendTo: function (ignore, cb) {
+          cb();
+        }
+    }
+
+    $('#other-videos').remove();
+    $('#widget-container').append('<div id="other-videos"></div>');
+} else {
 // here goes canvas designer
-var designer = new CanvasDesigner();
+    designer = new CanvasDesigner();
 
 // you can place widget.html anywhere
-designer.widgetHtmlURL = '/node_modules/canvas-designer/widget.html';
-designer.widgetJsURL = '/node_modules/canvas-designer/widget.min.js'
+    designer.widgetHtmlURL = '/node_modules/canvas-designer/widget.html';
+    designer.widgetJsURL = '/node_modules/canvas-designer/widget.min.js'
 
-designer.addSyncListener(function(data) {
-    connection.send(data);
-});
+    designer.addSyncListener(function(data) {
+        connection.send(data);
+    });
 
-designer.setSelected('pencil');
+    designer.setSelected('pencil');
 
-designer.setTools({
-    pencil: true,
-    text: true,
-    image: true,
-    pdf: true,
-    eraser: true,
-    line: true,
-    arrow: true,
-    dragSingle: true,
-    dragMultiple: true,
-    arc: true,
-    rectangle: true,
-    quadratic: false,
-    bezier: true,
-    marker: true,
-    zoom: false,
-    lineWidth: false,
-    colorsPicker: false,
-    extraOptions: false,
-    code: false,
-    undo: true
-});
+    designer.setTools({
+        pencil: true,
+        text: true,
+        image: true,
+        pdf: true,
+        eraser: true,
+        line: true,
+        arrow: true,
+        dragSingle: true,
+        dragMultiple: true,
+        arc: true,
+        rectangle: true,
+        quadratic: false,
+        bezier: true,
+        marker: true,
+        zoom: false,
+        lineWidth: false,
+        colorsPicker: false,
+        extraOptions: false,
+        code: false,
+        undo: true
+    });
+}
 
 // here goes RTCMultiConnection
-
 connection.chunkSize = 16000;
 connection.enableFileSharing = true;
 
@@ -364,16 +385,18 @@ connection.onstream = function(event) {
         $('#screen-viewer').hide();
     }
     else if (event.extra.roomOwner === true) {
-        var video = document.getElementById('main-video');
-        video.setAttribute('data-streamid', event.streamid);
-        // video.style.display = 'none';
-        if(event.type === 'local') {
-            video.muted = true;
-            video.volume = 0;
+        if (params.disableTeacherVideo !== 'true') {
+            var video = document.getElementById('main-video');
+            video.setAttribute('data-streamid', event.streamid);
+            // video.style.display = 'none';
+            if(event.type === 'local') {
+                video.muted = true;
+                video.volume = 0;
+            }
+            video.srcObject = event.stream;
         }
-        video.srcObject = event.stream;
         $('#main-video').show();
-    } else {
+    } else if (params.disableStudentVideo !== 'true') {
         event.mediaElement.controls = false;
 
         var otherVideos = document.querySelector('#other-videos');
@@ -610,12 +633,9 @@ if(!!params.password) {
     connection.password = params.password;
 }
 
-console.log('##############this');
-
 designer.appendTo(document.getElementById('widget-container'), function() {
     console.log('after append to');
     if (params.open === true || params.open === 'true') {
-        console.log('open true');
             var tempStreamCanvas = document.getElementById('temp-stream-canvas');
             var tempStream = tempStreamCanvas.captureStream();
             tempStream.isScreen = true;

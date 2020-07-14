@@ -786,6 +786,10 @@ module.exports = exports = function(socket, config) {
                     console.log('rooms :: ', room);
                     rooms.push({
                         academyName: room.academyName,
+                        disableTeacherVideo: room.disableTeacherVideo,
+                        disableStudentVideo: room.disableStudentVideo,
+                        disableChatting: room.disableChatting,
+                        disableShareDisplay: room.disableShareDisplay,
                         maxParticipantsAllowed: room.maxParticipantsAllowed,
                         owner: room.owner,
                         participants: room.participants,
@@ -833,7 +837,12 @@ module.exports = exports = function(socket, config) {
                     };
                 }
                 listOfUsers[socket.userid].extra = arg.extra;
+
                 listOfUsers[socket.userid].academyName = arg.academyName;
+                listOfUsers[socket.userid].disableTeacherVideo = arg.disableTeacherVideo;
+                listOfUsers[socket.userid].disableStudentVideo = arg.disableStudentVideo;
+                listOfUsers[socket.userid].disableChatting = arg.disableChatting;
+                listOfUsers[socket.userid].disableShareDisplay = arg.disableShareDisplay;
 
                 if (arg.session && (arg.session.oneway === true || arg.session.broadcast === true)) {
                     autoCloseEntireSession = true;
@@ -851,7 +860,7 @@ module.exports = exports = function(socket, config) {
                     if (Object.keys(listOfRooms[arg.sessionid]).length == 1) {
                         listOfRooms[arg.sessionid].owner = socket.userid;
                         listOfRooms[arg.sessionid].session = arg.session;
-                        listOfRooms[arg.sessionid].academyName = arg.academyName;
+
                     }
                 } else {
                     // for non-scalable-broadcast demos
@@ -861,7 +870,6 @@ module.exports = exports = function(socket, config) {
                     listOfRooms[arg.sessionid].socketMessageEvent = listOfUsers[socket.userid].socketMessageEvent;
                     listOfRooms[arg.sessionid].socketCustomEvent = listOfUsers[socket.userid].socketCustomEvent;
                     listOfRooms[arg.sessionid].maxParticipantsAllowed = parseInt(params.maxParticipantsAllowed || 1000) || 1000;
-                    listOfRooms[arg.sessionid].academyName = arg.academyName;
 
                     if(arg.identifier && arg.identifier.toString().length) {
                         listOfRooms[arg.sessionid].identifier = arg.identifier;
@@ -875,6 +883,14 @@ module.exports = exports = function(socket, config) {
                     } catch (e) {
                         pushLogs(config, 'open-room.password', e);
                     }
+                }
+
+                if (listOfRooms[arg.sessionid]) {
+                    listOfRooms[arg.sessionid].academyName = arg.academyName;
+                    listOfRooms[arg.sessionid].disableTeacherVideo = arg.disableTeacherVideo;
+                    listOfRooms[arg.sessionid].disableStudentVideo = arg.disableStudentVideo;
+                    listOfRooms[arg.sessionid].disableChatting = arg.disableChatting;
+                    listOfRooms[arg.sessionid].disableShareDisplay = arg.disableShareDisplay;
                 }
 
                 // admin info are shared only with /admin/

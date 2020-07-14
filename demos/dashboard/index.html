@@ -301,6 +301,7 @@ input[disabled], button[disabled] {
         <th>Owner ID</th>
         <th>Session</th>
         <th>Extra</th>
+        <th>Disabled</th>
         <th>Participants</th>
         <th>Join</th>
       </tr>
@@ -362,6 +363,13 @@ input[disabled], button[disabled] {
               <p>
                 <label for="txt-user-name" class="col-form-label">Enter Your Name:</label>
                 <input type="text" class="form-control" id="txt-user-name">
+              </p>
+
+              <p>
+                <label class="col-form-label"><input type="checkbox" id="chk-disable-teacher-video"> 선생님 영상 비활성화 </label> <br/>
+                <label class="col-form-label"><input type="checkbox" id="chk-disable-student-video"> 학생 영상 비활성화 </label> <br/>
+                <label class="col-form-label"><input type="checkbox" id="chk-disable-share-display"> 화면 공유 비활성화 </label> <br/>
+                <label class="col-form-label"><input type="checkbox" id="chk-disable-chatting"> 채팅 비활성화 </label> <br/>
               </p>
 
               <p style="display: none;">
@@ -580,6 +588,12 @@ function updateListOfRooms(rooms) {
 
             html += '<td><span class="max-width" title="' + JSON.stringify(room.extra || {}).replace(/"/g, '`') + '">' + JSON.stringify(room.extra || {}) + '</span></td>';
 
+            var disableContents = '선생님 영상 비활성화: ' + room.disableTeacherVideo + '<br/>';
+            disableContents += '학생 영상 비활성화: ' + room.disableStudentVideo + '<br/>';
+            disableContents += '화면 공유 비활성화: ' + room.disableShareDisplay + '<br/>';
+            disableContents += '채팅 비활성화: ' + room.disableChatting + '<br/>';
+            html += '<td><span>' + disableContents + '</span></td>';
+
             html += '<td>';
             room.participants.forEach(function(pid) {
                 html += '<span class="userinfo"><span class="max-width" title="' + pid + '">' + pid + '</span></span><br>';
@@ -595,9 +609,8 @@ function updateListOfRooms(rooms) {
                 html += '<td><button class="btn join-room" data-roomid="' + room.sessionid + '" data-password-protected="' + (room.isPasswordProtected === true ? 'true' : 'false') +'">Join</button></td>';
             }
 
-            $(tr).html(html);
+            $(tr).html(html).attr('data-room', JSON.stringify(room));
             $template.find('tbody').append(tr);
-            // $('#rooms-list').append(tr);
 
             $(tr).find('.join-room').click(function() {
                 $(tr).find('.join-room').prop('disabled', true);
@@ -666,6 +679,7 @@ $('#btn-join-hidden-room').click(function() {
 });
 
 function joinAHiddenRoom(roomid) {
+    console.log('1!!!!!!!! joinAHiddenRoom');
     var initialHTML = $('#btn-join-hidden-room').html();
 
     $('#btn-join-hidden-room').html('Please wait...').prop('disabled', true);
@@ -680,16 +694,36 @@ function joinAHiddenRoom(roomid) {
         connection.sessionid = roomid;
         connection.isInitiator = false;
         $('#joinRoomModel').modal('hide');
-        openCanvasDesigner();
 
-        $('#btn-join-hidden-room').html(initialHTML).prop('disabled', false);
+        connection.socket.emit('get-public-rooms', publicRoomIdentifier, function(listOfRooms) {
+            var roomInfo = listOfRooms.find(r => r.sessionid.toString() === roomid.toString());
+            var disables = {
+                disableTeacherVideo: roomInfo.disableTeacherVideo,
+                disableStudentVideo: roomInfo.disableStudentVideo,
+                disableChatting: roomInfo.disableChatting,
+                disableShareDisplay: roomInfo.disableShareDisplay
+            }
+            openCanvasDesigner(disables);
+            $('#btn-join-hidden-room').html(initialHTML).prop('disabled', false);
+        });
     })
 }
 
-function openCanvasDesigner() {
+function openCanvasDesigner(disables) {
+    console.log('[openCanvasDesigner] - ', disables);
     $('#startRoomModel').modal('hide');
     var url = [location.protocol, '//', location.host, location.pathname].join('');
-    var href = url + 'canvas-designer.html?open=' + connection.isInitiator + '&sessionid=' + connection.sessionid + '&publicRoomIdentifier=' + connection.publicRoomIdentifier + '&userFullName=' + connection.extra.userFullName + '&academyName=' + connection.academyName;
+    var href = (url + 'canvas-designer.html?') + [
+        'open=' + connection.isInitiator,
+        'sessionid=' + connection.sessionid,
+        'publicRoomIdentifier=' + connection.publicRoomIdentifier,
+        'userFullName=' + connection.extra.userFullName,
+        'academyName=' + connection.academyName,
+        'disableTeacherVideo=' + disables.disableTeacherVideo,
+        'disableStudentVideo=' + disables.disableStudentVideo,
+        'disableChatting=' + disables.disableChatting,
+        'disableShareDisplay=' + disables.disableShareDisplay
+    ].join('&');
     
     if(!!connection.password) {
       href += '&password=' + connection.password;
@@ -812,7 +846,14 @@ $('#btn-create-room').click(function() {
 
         connection.sessionid = roomid;
         connection.isInitiator = true;
-        openCanvasDesigner();
+
+        var disables = {
+            disableTeacherVideo: $('#chk-disable-teacher-video').is(':checked'),
+            disableStudentVideo: $('#chk-disable-student-video').is(':checked'),
+            disableChatting: $('#chk-disable-chatting').is(':checked'),
+            disableShareDisplay: $('#chk-disable-share-display').is(':checked')
+        }
+        openCanvasDesigner(disables);
         $('#btn-create-room').html(initialHTML).prop('disabled', false);
     });
 });

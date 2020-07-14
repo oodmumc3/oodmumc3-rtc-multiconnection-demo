@@ -4490,6 +4490,10 @@ var RTCMultiConnection = function(roomid, forceOptions) {
             connection.waitingForLocalMedia = false;
             connection.socket.emit('open-room', {
                 academyName: connection.academyName,
+                disableTeacherVideo: connection.disableTeacherVideo,
+                disableStudentVideo: connection.disableStudentVideo,
+                disableChatting: connection.disableChatting,
+                disableShareDisplay: connection.disableShareDisplay,
                 sessionid: connection.sessionid,
                 session: connection.session,
                 mediaConstraints: connection.mediaConstraints,
