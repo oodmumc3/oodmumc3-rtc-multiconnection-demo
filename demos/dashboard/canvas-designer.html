@@ -71,7 +71,7 @@ input[disabled], button[disabled] {
 }
 
 #other-videos video {
-    width: 45%;
+    width: 10%;
     margin: 5px;
     border: 1px solid black;
     padding: 1px;
@@ -156,12 +156,14 @@ hr {
 
 <article>
 
-<div id="widget-container" style="position: fixed;bottom: 0;right: 0;left: 20%;height: 100%;border: 1px solid black; border-top:0; border-bottom: 0;"></div>
+<div id="widget-container" style="position: fixed;bottom: 0;right: 0;left: 20%;height: 100%;border: 1px solid black; border-top:0; border-bottom: 0;">
+  <input type="button" id="changeDisplay" value="학생 화면 보기" />
+  <div id="other-videos" style="display: none;"></div>
+</div>
 <video id="screen-viewer" controls playsinline autoplay></video>
 
 <div style="width: 20%; height: 100%; position: absolute;left:0;">
     <video id="main-video" controls playsinline autoplay></video>
-    <div id="other-videos"></div>
     <hr>
     <div style="padding: 5px 10px;">
         <div id="onUserStatusChanged"></div>
@@ -815,6 +817,20 @@ $('#btn-share-screen').click(function() {
     }
     else {
         alert('getDisplayMedia API is not available in this browser.');
+    }
+});
+
+$('#changeDisplay').click(function (e) {
+    var $iframe = $('#widget-container').find('iframe');
+    var $otherVideos = $('#other-videos');
+    if ($iframe.is(':hidden')) {
+        $iframe.show();
+        $otherVideos.hide();
+        $(this).val('학생 화면 보기');
+    } else {
+        $iframe.hide();
+        $otherVideos.show();
+        $(this).val('공유 화면 보기');
     }
 });
 </script>
