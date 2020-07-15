@@ -1852,8 +1852,10 @@
                 clearInterval(textHandler.blinkCursorInterval);
             }
 
-            textHandler.blinkCursor();
-            textHandler.blinkCursorInterval = setInterval(textHandler.blinkCursor, 700);
+            // textHandler.blinkCursor();
+            // textHandler.blinkCursorInterval = setInterval(textHandler.blinkCursor, 700);
+            textHandler.textArea.focus();
+            textHandler.textArea.value = '';
 
             this.showTextTools();
         },
@@ -1872,12 +1874,16 @@
 
             this.fontFamilyBox.style.display = show == 'show' ? 'block' : 'none';
             this.fontSizeBox.style.display = show == 'show' ? 'block' : 'none';
+            this.textAreaContainer.style.display = show == 'show' ? 'block' : 'none';
+            if (show === 'hide') { this.textArea.value = ''; }
 
             this.fontSizeBox.style.left = this.x + 'px';
             this.fontFamilyBox.style.left = (this.fontSizeBox.clientWidth + this.x) + 'px';
+            this.textAreaContainer.style.left = textHandler.x + 'px';
 
-            this.fontSizeBox.style.top = this.y + 'px';
-            this.fontFamilyBox.style.top = this.y + 'px';
+            this.fontSizeBox.style.top = (this.y + this.textAreaContainer.clientHeight) + 'px';
+            this.fontFamilyBox.style.top = (this.y + this.textAreaContainer.clientHeight) + 'px';
+            this.textAreaContainer.style.top = this.y + 'px';
         },
         showTextTools: function() {
             if (!this.fontFamilyBox || !this.fontSizeBox) return;
@@ -1892,6 +1898,7 @@
                     e.preventDefault();
 
                     textHandler.showOrHideTextTools('hide');
+                    textHandler.textArea.value = '';
 
                     textHandler.selectedFontFamily = this.innerHTML;
                     this.className = 'font-family-selected';
@@ -1904,6 +1911,7 @@
                     e.preventDefault();
 
                     textHandler.showOrHideTextTools('hide');
+                    textHandler.textArea.value = '';
 
                     textHandler.selectedFontSize = this.innerHTML;
                     this.className = 'font-family-selected';
@@ -1950,7 +1958,9 @@
             drawHelper.redraw();
         },
         fontFamilyBox: document.querySelector('.fontSelectUl'),
-        fontSizeBox: document.querySelector('.fontSizeUl')
+        fontSizeBox: document.querySelector('.fontSizeUl'),
+        textAreaContainer: document.querySelector('#temp-write-down-area'),
+        textArea: document.querySelector('#temp-write-down-area').getElementsByTagName('textarea')[0]
     };
 
     var arcHandler = {
@@ -3881,7 +3891,20 @@
         }
     }
 
-    addEvent(document, 'keypress', onkeypress);
+    function onTextAreaKeyDown(e) {
+        var textValue = e.target.value;
+        if (/[ㄱ-ㅎ|가-힣|a-zA-Z0-9-_ !?|\/'",.=:;(){}\[\]`~@#$%^&*+-]/.test(textValue)) {
+            textHandler.text = textValue;
+            textHandler.fillText(textValue);
+        }
+    }
+
+    // addEvent(document, 'keypress', onkeypress);
+    addEvent(textHandler.textArea, 'keyup', onTextAreaKeyDown);
+    addEvent(textHandler.textAreaContainer.querySelector('input[type="button"]'), 'click', function (e) {
+        textHandler.appendPoints();
+        textHandler.showOrHideTextTools('hide');
+    });
 
     function onTextFromClipboard(e) {
         if (!is.isText) return;
