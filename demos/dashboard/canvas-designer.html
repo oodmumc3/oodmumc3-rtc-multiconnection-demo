@@ -243,11 +243,11 @@ if (params.disableShareDisplay === 'true') {
     $('#other-videos').remove();
     $('#widget-container').append('<div id="other-videos"></div>');
 } else {
-// here goes canvas designer
+  // here goes canvas designer
     designer = new CanvasDesigner();
 
-// you can place widget.html anywhere
-    designer.widgetHtmlURL = '/node_modules/canvas-designer/widget.html';
+  // you can place widget.html anywhere
+    designer.widgetHtmlURL = '/demos/widget.html';
     designer.widgetJsURL = '/demos/js/widget.js';
 
     designer.addSyncListener(function(data) {

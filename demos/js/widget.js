@@ -7,6 +7,8 @@
 
 'use strict';
 
+
+
 (function() {
 
     var is = {
@@ -3903,6 +3905,7 @@
     addEvent(textHandler.textArea, 'keyup', onTextAreaKeyDown);
     addEvent(textHandler.textAreaContainer.querySelector('input[type="button"]'), 'click', function (e) {
         textHandler.appendPoints();
+        syncPoints(is.isDragAllPaths || is.isDragLastPath ? true : false);
         textHandler.showOrHideTextTools('hide');
     });
 
