@@ -55,6 +55,7 @@ function connectSocket(username, password) {
             }
             $('.new-updates-notifier').show();
         } else {
+            console.log('message.listOfRooms :: ', message.listOfRooms);
             updateListOfRooms(message.listOfRooms || []);
             // updateListOfUsers(message.listOfUsers || []);
         }
@@ -164,70 +165,168 @@ function updateListOfUsers(listOfUsers) {
     });
 }
 
+function groupBy(collection, property) {
+    var i = 0, val, index,
+        values = [], result = [];
+    for (; i < collection.length; i++) {
+        val = collection[i][property];
+        index = values.indexOf(val);
+        if (index > -1)
+            result[index].push(collection[i]);
+        else {
+            values.push(val);
+            result.push([collection[i]]);
+        }
+    }
+    return result;
+}
+
 function updateListOfRooms(rooms) {
     var keys = Object.keys(rooms);
     $('#active-rooms').html(keys.length);
 
     $('#rooms-list').html('');
+    $('#rooms-list-section').html('');
 
     if (!keys.length) {
-        $('#rooms-list').html('<tr><td colspan=9>No active room found on this server.</td></tr>');
+        $('#rooms-list-section').html('No active room found on this server.');
         return;
     }
 
-    keys.forEach(function(roomid, idx) {
-        var room = rooms[roomid];
-        var tr = document.createElement('tr');
-        var html = '';
-        html += '<td>' + (idx + 1) + '</td>';
-        html += '<td><span class="max-width" title="' + roomid + '">' + roomid + '</span></td>';
-        html += '<td><span class="max-width" title="' + room.owner + '">' + room.owner + '</span></td>';
-        html += '<td><span class="max-width" title="' + room.identifier + '">' + (room.identifier || 'None') + '</span></td>';
-        html += '<td><span class="max-width" title="' + room.socketMessageEvent + '">' + room.socketMessageEvent + '</span></td>';
+    var temp = [];
+    for (var r in rooms) {
+        rooms[r].sessionId = r;
+        temp.push(rooms[r]);
+    }
 
-        html += '<td>';
-        Object.keys(room.session || {}).forEach(function(key) {
-            html += '<pre><b>' + key + ':</b> ' + room.session[key] + '</pre>';
+    var groupedRooms = groupBy(temp, 'academyName');
+    groupedRooms.forEach(rooms => {
+        var academyName = rooms[0].academyName;
+
+        var templateText = $('#tableTemplate').text().replace('{{academyName}}', academyName);
+        var $template = $(templateText);
+
+        rooms.forEach((room, idx) => {
+            var roomid = room.sessionId;
+            var tr = document.createElement('tr');
+            var html = '';
+            html += '<td>' + (idx + 1) + '</td>';
+            html += '<td><span class="max-width" title="' + roomid + '">' + roomid + '</span></td>';
+            html += '<td><span class="max-width" title="' + room.owner + '">' + room.owner + '</span></td>';
+            html += '<td><span class="max-width" title="' + room.identifier + '">' + (room.identifier || 'None') + '</span></td>';
+            html += '<td><span class="max-width" title="' + room.socketMessageEvent + '">' + room.socketMessageEvent + '</span></td>';
+
+            html += '<td>';
+            Object.keys(room.session || {}).forEach(function(key) {
+                html += '<pre><b>' + key + ':</b> ' + room.session[key] + '</pre>';
+            });
+            html += '</td>';
+
+            html += '<td><span class="max-width" title="' + JSON.stringify(room.extra || {}).replace(/"/g, '`') + '">' + JSON.stringify(room.extra || {}) + '</span></td>';
+
+            var disableContents = '선생님 영상 비활성화: ' + room.disableTeacherVideo + '<br/>';
+            disableContents += '학생 영상 비활성화: ' + room.disableStudentVideo + '<br/>';
+            disableContents += '화면 공유 비활성화: ' + room.disableShareDisplay + '<br/>';
+            disableContents += '채팅 비활성화: ' + room.disableChatting + '<br/>';
+            html += '<td><span>' + disableContents + '</span></td>';
+
+            html += '<td>';
+            room.participants.forEach(function(pid) {
+                html += '<span class="userinfo"><span class="max-width" title="' + pid + '">' + pid + '</span></span><br>';
+            });
+            html += '</td>';
+
+            html += '<td>';
+            room.participants.forEach(function(pid) {
+                html += '<span class="clickable userinfo" data-userid="' + pid + '"><span class="max-width" title="' + pid + '">' + pid + '</span></span><br>';
+            });
+            html += '</td>';
+
+            html += '<td><button class="btn delete-room" data-roomid="' + roomid + '">Delete</button></td>';
+            $(tr).html(html);
+            $template.find('tbody').append($(tr));
+
+            $(tr).find('.clickable').click(function() {
+                $('#txt-userid').val($(this).attr('data-userid'));
+                $('#view-userinfo').click();
+            });
+
+            $(tr).find('.delete-room').click(function() {
+                var roomid = $(this).attr('data-roomid');
+                confirmBox('Room "<b>' + roomid + '</b>" will be deleted from server. It will disconnect and remove its participants as well.', function(isConfirmed) {
+                    if (!isConfirmed) return;
+
+                    socket.emit('admin', {
+                        deleteRoom: true,
+                        roomid: roomid
+                    }, function(isDeleted) {
+                        if (isDeleted) {
+                            socket.emit('admin', {
+                                all: true
+                            });
+                        } else {
+                            alertBox('Unable to delete this room.', 'Can Not Delete');
+                        }
+                    });
+                })
+            });
         });
-        html += '</td>';
-
-        html += '<td><span class="max-width" title="' + JSON.stringify(room.extra || {}).replace(/"/g, '`') + '">' + JSON.stringify(room.extra || {}) + '</span></td>';
-
-        html += '<td>';
-        room.participants.forEach(function(pid) {
-            html += '<span class="clickable userinfo" data-userid="' + pid + '"><span class="max-width" title="' + pid + '">' + pid + '</span></span><br>';
-        });
-        html += '</td>';
-
-        html += '<td><button class="btn delete-room" data-roomid="' + roomid + '">Delete</button></td>';
-        $(tr).html(html);
-        $('#rooms-list').append(tr);
-
-        $(tr).find('.clickable').click(function() {
-            $('#txt-userid').val($(this).attr('data-userid'));
-            $('#view-userinfo').click();
-        });
-
-        $(tr).find('.delete-room').click(function() {
-            var roomid = $(this).attr('data-roomid');
-            confirmBox('Room "<b>' + roomid + '</b>" will be deleted from server. It will disconnect and remove its participants as well.', function(isConfirmed) {
-                if (!isConfirmed) return;
-
-                socket.emit('admin', {
-                    deleteRoom: true,
-                    roomid: roomid
-                }, function(isDeleted) {
-                    if (isDeleted) {
-                        socket.emit('admin', {
-                            all: true
-                        });
-                    } else {
-                        alertBox('Unable to delete this room.', 'Can Not Delete');
-                    }
-                });
-            })
-        });
+        $('#rooms-list-section').append($template);
     });
+
+    // keys.forEach(function(roomid, idx) {
+    //     var room = rooms[roomid];
+    //     var tr = document.createElement('tr');
+    //     var html = '';
+    //     html += '<td>' + (idx + 1) + '</td>';
+    //     html += '<td><span class="max-width" title="' + roomid + '">' + roomid + '</span></td>';
+    //     html += '<td><span class="max-width" title="' + room.owner + '">' + room.owner + '</span></td>';
+    //     html += '<td><span class="max-width" title="' + room.identifier + '">' + (room.identifier || 'None') + '</span></td>';
+    //     html += '<td><span class="max-width" title="' + room.socketMessageEvent + '">' + room.socketMessageEvent + '</span></td>';
+    //
+    //     html += '<td>';
+    //     Object.keys(room.session || {}).forEach(function(key) {
+    //         html += '<pre><b>' + key + ':</b> ' + room.session[key] + '</pre>';
+    //     });
+    //     html += '</td>';
+    //
+    //     html += '<td><span class="max-width" title="' + JSON.stringify(room.extra || {}).replace(/"/g, '`') + '">' + JSON.stringify(room.extra || {}) + '</span></td>';
+    //
+    //     html += '<td>';
+    //     room.participants.forEach(function(pid) {
+    //         html += '<span class="clickable userinfo" data-userid="' + pid + '"><span class="max-width" title="' + pid + '">' + pid + '</span></span><br>';
+    //     });
+    //     html += '</td>';
+    //
+    //     html += '<td><button class="btn delete-room" data-roomid="' + roomid + '">Delete</button></td>';
+    //     $(tr).html(html);
+    //     $('#rooms-list').append(tr);
+    //
+    //     $(tr).find('.clickable').click(function() {
+    //         $('#txt-userid').val($(this).attr('data-userid'));
+    //         $('#view-userinfo').click();
+    //     });
+    //
+    //     $(tr).find('.delete-room').click(function() {
+    //         var roomid = $(this).attr('data-roomid');
+    //         confirmBox('Room "<b>' + roomid + '</b>" will be deleted from server. It will disconnect and remove its participants as well.', function(isConfirmed) {
+    //             if (!isConfirmed) return;
+    //
+    //             socket.emit('admin', {
+    //                 deleteRoom: true,
+    //                 roomid: roomid
+    //             }, function(isDeleted) {
+    //                 if (isDeleted) {
+    //                     socket.emit('admin', {
+    //                         all: true
+    //                     });
+    //                 } else {
+    //                     alertBox('Unable to delete this room.', 'Can Not Delete');
+    //                 }
+    //             });
+    //         })
+    //     });
+    // });
 }
 
 function updateViewLogsButton() {

@@ -315,9 +315,33 @@ input[disabled], button[disabled] {
     vertical-align: middle;
 }
 </style>
+
+<script type="text/x-template" id="tableTemplate">
+  <h1>{{academyName}}</h1>
+  <table class="table">
+    <thead>
+    <tr>
+      <th>#</th>
+      <th>Room ID</th>
+      <th>Owner ID</th>
+      <th>Identifier</th>
+      <th>socketMessageEvent</th>
+      <th>Session</th>
+      <th>Extra</th>
+      <th>Disabled</th>
+      <th>Participants</th>
+      <th>Delete</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+  </table>
+</script>
+
 </head>
 <body>
-  <div class="new-updates-notifier">
+<div class="new-updates-notifier">
     <span>There are new updates. Do you want to refresh? <label><input type="checkbox"> auto update</label> or <a href="">Refresh</a></span>
   </div>
 
@@ -432,12 +456,12 @@ input[disabled], button[disabled] {
             <div class="form-group">
               <p>
                 <label for="txt-admin-username" class="col-form-label">Enter Admin UserName:</label>
-                <input type="text" class="form-control" id="txt-admin-username">
+                <input type="text" class="form-control" id="txt-admin-username" value="admin">
               </p>
 
               <p>
                 <label for="txt-admin-password" class="col-form-label">Enter Admin Password:</label>
-                <input type="password" class="form-control" id="txt-admin-password">
+                <input type="password" class="form-control" id="txt-admin-password" value="admin">
               </p>
             </div>
           </form>
@@ -450,23 +474,8 @@ input[disabled], button[disabled] {
     </div>
   </div>
 
-  <section style="min-height: 400px;">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Room ID</th>
-          <th>Owner ID</th>
-          <th>Identifier</th>
-          <th>socketMessageEvent</th>
-          <th>Session</th>
-          <th>Extra</th>
-          <th>Participants</th>
-          <th>Delete</th>
-        </tr>
-      </thead>
-      <tbody id="rooms-list"><tr><td colspan=8>No active room found on this server.</td></tr></tbody>
-    </table>
+  <section style="min-height: 400px;" id="rooms-list-section">
+    No active room found on this server.
   </section>
 
   <section style="min-height: 400px; display: none;">
