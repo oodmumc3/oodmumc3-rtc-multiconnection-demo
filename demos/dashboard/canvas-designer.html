@@ -70,6 +70,7 @@ input[disabled], button[disabled] {
     margin-top: 5px;
 }
 
+/* 학생 비디오 원래대로 수정 -> width: 10% -> 45%로 변경 */
 #other-videos video {
     width: 10%;
     margin: 5px;
@@ -157,13 +158,17 @@ hr {
 <article>
 
 <div id="widget-container" style="position: fixed;bottom: 0;right: 0;left: 20%;height: 100%;border: 1px solid black; border-top:0; border-bottom: 0;">
+  <!-- 학생 비디오 원래대로 수정 -> 아래 버튼 주석처리 -->
   <input type="button" id="changeDisplay" value="학생 화면 보기" />
-  <div id="other-videos" style="display: none;"></div>
+  <!-- 학생 비디오 원래대로 수정 -> 아래 other-videos 주석처리 -->
+  <div id="other-videos"></div>
 </div>
 <video id="screen-viewer" controls playsinline autoplay></video>
 
 <div style="width: 20%; height: 100%; position: absolute;left:0;">
     <video id="main-video" controls playsinline autoplay></video>
+    <!-- 학생 비디오 원래대로 수정 -> 아래 other-videos 주석 삭제 -->
+<!--    <div id="other-videos"></div>-->
     <hr>
     <div style="padding: 5px 10px;">
         <div id="onUserStatusChanged"></div>
@@ -239,9 +244,6 @@ if (params.disableShareDisplay === 'true') {
           cb();
         }
     }
-
-    $('#other-videos').remove();
-    $('#widget-container').append('<div id="other-videos"></div>');
 } else {
   // here goes canvas designer
     designer = new CanvasDesigner();
