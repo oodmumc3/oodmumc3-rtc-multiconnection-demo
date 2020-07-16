@@ -203,6 +203,8 @@ function updateListOfRooms(rooms) {
     groupedRooms.forEach(rooms => {
         var academyName = rooms[0].academyName;
 
+        if (params.academy && params.academy !== academyName) { return true; }
+
         var templateText = $('#tableTemplate').text().replace('{{academyName}}', academyName);
         var $template = $(templateText);
 

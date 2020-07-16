@@ -15,6 +15,21 @@
   <script src="/demos/js/bootstrap.min.js"></script>
   <script src="/socket.io/socket.io.js"></script>
 
+  <script type="text/javascript">
+      (function() {
+          var params = {},
+              r = /([^&=]+)=?([^&]*)/g;
+
+          function d(s) {
+              return decodeURIComponent(s.replace(/\+/g, ' '));
+          }
+          var match, search = window.location.search;
+          while (match = r.exec(search.substring(1)))
+              params[d(match[1])] = d(match[2]);
+          window.params = params;
+      })();
+  </script>
+
 <style type="text/css">
 html, body, section, ul, li, nav, a, h1, h2 {
     padding: 0;
