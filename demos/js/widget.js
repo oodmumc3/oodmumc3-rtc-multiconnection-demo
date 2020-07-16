@@ -1885,7 +1885,7 @@
 
             this.fontSizeBox.style.top = (this.y + this.textAreaContainer.clientHeight) + 'px';
             this.fontFamilyBox.style.top = (this.y + this.textAreaContainer.clientHeight) + 'px';
-            this.textAreaContainer.style.top = this.y + 'px';
+            this.textAreaContainer.style.top = (this.y + 20) + 'px';
         },
         showTextTools: function() {
             if (!this.fontFamilyBox || !this.fontSizeBox) return;
