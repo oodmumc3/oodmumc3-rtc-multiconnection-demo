@@ -3423,7 +3423,13 @@ var RTCMultiConnection = function(roomid, forceOptions) {
                     'stun:stun2.l.google.com:19302',
                     'stun:stun.l.google.com:19302?transport=udp',
                 ]
-            }];
+            },
+            {
+              urls: 'turn:numb.viagenie.ca',
+              credential: 'muazkh',
+              username: 'webrtc@live.com'
+            }
+            ];
 
             return iceServers;
         }
